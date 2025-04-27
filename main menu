@@ -1,0 +1,103 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(FoodRecipeApp());
+}
+
+class FoodRecipeApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Food Recipe App',
+      theme: ThemeData(
+        primarySwatch: Colors.green,
+      ),
+      home: RecipeListScreen(),
+    );
+  }
+}
+
+class RecipeListScreen extends StatelessWidget {
+  final List<Recipe> recipes = [
+    Recipe(
+      title: 'Spaghetti Carbonara',
+      ingredients: ['Spaghetti', 'Eggs', 'Parmesan cheese', 'Pancetta', 'Pepper'],
+      recommendations: 'Serve with garlic bread.',
+    ),
+    Recipe(
+      title: 'Chicken Curry',
+      ingredients: ['Chicken', 'Curry powder', 'Coconut milk', 'Onions', 'Garlic'],
+      recommendations: 'Pair with rice or naan.',
+    ),
+    Recipe(
+      title: 'Caesar Salad',
+      ingredients: ['Lettuce', 'Croutons', 'Parmesan cheese', 'Caesar dressing'],
+      recommendations: 'Great as a side dish.',
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Food Recipes'),
+      ),
+      body: ListView.builder(
+        itemCount: recipes.length,
+        itemBuilder: (context, index) {
+          return Card(
+            margin: EdgeInsets.all(8.0),
+            child: ListTile(
+              title: Text(recipes[index].title),
+              subtitle: Text('Ingredients: ${recipes[index].ingredients.join(', ')}'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => RecipeDetailScreen(recipe: recipes[index]),
+                  ),
+                );
+              },
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class RecipeDetailScreen extends StatelessWidget {
+  final Recipe recipe;
+
+  RecipeDetailScreen({required this.recipe});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(recipe.title),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Ingredients:', style: TextStyle(fontWeight: FontWeight.bold)),
+            ...recipe.ingredients.map((ingredient) => Text('- $ingredient')).toList(),
+            SizedBox(height: 20),
+            Text('Recommendations:', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(recipe.recommendations),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class Recipe {
+  final String title;
+  final List<String> ingredients;
+  final String recommendations;
+
+  Recipe({required this.title, required this.ingredients, required this.recommendations});
+}

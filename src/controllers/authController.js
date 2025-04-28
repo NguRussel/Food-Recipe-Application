@@ -1,3 +1,7 @@
+import bcrypt from 'bcryptjs';
+import User from '../models/user';
+
+
 export const register = async (req, res) => {
     const { username, password, email } = req.body;
 
@@ -16,8 +20,11 @@ export const register = async (req, res) => {
             username,
             password: hashedPassword,
             email,
-        });
+            isMfaActivated: false, // Default value
 
+        });
+        console.log('New user:', newUser);
+        // Save user to database
         await newUser.save();
         res.status(201).json({ message: 'User registered successfully' });
     }

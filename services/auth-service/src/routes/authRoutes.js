@@ -39,6 +39,17 @@ router.get("/auth", (req, res) => {
   }
 });
 
+// Auth status route
+router.get("/status", authStatus);
+
+// MFA status route
+router.get("/mfa/status", (req, res) => {
+  if (req.user) {
+    return res.status(200).json({ isMfaActive: req.user.isMfaActive });
+  } else {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+});
 
 // MFA routes
 router.post("/mfa/setup", (req, res) => {

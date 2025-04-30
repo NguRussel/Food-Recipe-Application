@@ -26,7 +26,17 @@ export const  login = async (req, res) => {
     res.status(200).json({ message: "Login successful", username: req.user, isMfaActive: req.user.isMfaActive });
     
 };
-export const  logout = async (req, res) => {};      
+export const  logout = async (req, res) => {
+    if(!req.user) {
+        return res.status(401).json({ message: "Unauthorized user" });
+    }
+    req.logout((err) => {
+        if (err) {
+            return res.status(500).json({ message: "Logout failed", error: err });
+        }
+        res.status(200).json({ message: "Logout successful" });
+    });
+};      
 export const  reset2FA = async (req, res) => {
   // Logic to reset 2FA
   res.status(200).json({ message: "2FA reset" });
@@ -39,4 +49,13 @@ export const  setup2FA = async (req, res) => {
   // Logic to set up 2FA (e.g., generate a QR code)
   res.status(200).json({ message: "2FA setup" });
 };
-export const authStatus = async (req, res) => {};
+export const authStatus = async (req, res) => {
+    if(req.user) {
+        res.status(200).json({ 
+            message: "Authenticated",
+            user: req.user,
+            isMfaActive: req.user.isMfaActive,});
+    }else {
+        res.status(401).json({ message: "Unauthorized user" });
+    }
+};

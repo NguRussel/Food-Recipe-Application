@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import dbConnect from './config/dbConnect.js';
 import authRoutes from './routes/authRoutes.js';
+import "./config/passportConfig.js"; // Assuming you have a passport configuration file
 
 dotenv.config();
 dbConnect(); // Connect to the database
@@ -33,7 +34,7 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-//rountes
+//routes
 app.use('/api/auth', authRoutes);
 
 //listening app

@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  # Auth Service
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    ports:
+      - "${AUTH_SERVICE_PORT}:3000"
+    environment:
+      - MONGODB_URI=${AUTH_DB_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      - TWO_FACTOR_APP_NAME=${TWO_FACTOR_APP_NAME}
+    depends_on:
+      - auth-mongodb
+    networks:
+      - recipe-network
+
+  auth-mongodb:
+    image: mongo:latest
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=${AUTH_DB_NAME}
+    volumes:
+      - auth-data:/data/db
+    networks:
+      - recipe-network
+
+  # User Profile Service
+  user-profile-service:
+    build:
+      context: ./services/user-profile-service
+      dockerfile: Dockerfile
+    ports:
+      - "${USER_PROFILE_SERVICE_PORT}:3000"
+    environment:
+      - MONGODB_URI=${USER_PROFILE_DB_URI}
+    depends_on:
+      - user-profile-mongodb
+    networks:
+      - recipe-network
+
+  user-profile-mongodb:
+    image: mongo:latest
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=${USER_PROFILE_DB_NAME}
+    volumes:
+      - user-profile-data:/data/db
+    networks:
+      - recipe-network
+
+  # Recipe Service
+  recipe-service:
+    build:
+      context: ./services/recipe-service
+      dockerfile: Dockerfile
+    ports:
+      - "${RECIPE_SERVICE_PORT}:3000"
+    environment:
+      - MONGODB_URI=${RECIPE_DB_URI}
+    depends_on:
+      - recipe-mongodb
+    networks:
+      - recipe-network
+
+  recipe-mongodb:
+    image: mongo:latest
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=${RECIPE_DB_NAME}
+    volumes:
+      - recipe-data:/data/db
+    networks:
+      - recipe-network
+
+volumes:
+  auth-data:
+  user-profile-data:
+  recipe-data:
+
+networks:
+  recipe-network:
+    driver: bridge

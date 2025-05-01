@@ -224,4 +224,19 @@ export class AuthController {
       });
     }
   }
+
+  async logout(req: Request, res: Response) {
+    try {
+      // Clear the token cookie if you're using cookies
+      res.status(200).json({
+        status: 'success',
+        message: 'Successfully logged out'
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        status: 'error',
+        message: error.message || 'Logout failed'
+      });
+    }
+  }
 }

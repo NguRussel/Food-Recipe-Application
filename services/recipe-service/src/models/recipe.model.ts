@@ -1,22 +1,53 @@
-import mongoose from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose';
 
-const recipeSchema = new mongoose.Schema({
-  title: { type: String, required: true },
+export interface IIngredient {
+  name: string;
+  quantity: number;
+  unit: string;
+}
+
+export interface IRecipe extends Document {
+  title: string;
+  description: string;
+  ingredients: IIngredient[];
+  instructions: string[];
+  preparationTime: number;
+  cookingTime: number;
+  servings: number;
+  difficulty: 'easy' | 'medium' | 'hard';
+  culture: string;
+  category: string[];
+  authorId: string;
+  images: string[];
+  videoUrl?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const RecipeSchema: Schema = new Schema({
+  title: { type: String, required: true, index: true },
   description: { type: String, required: true },
   ingredients: [{
-    name: String,
-    quantity: String,
-    unit: String
+    name: { type: String, required: true },
+    quantity: { type: Number, required: true },
+    unit: { type: String, required: true }
   }],
-  instructions: [String],
-  culture: { type: String, required: true },
-  preparationTime: Number,
-  cookingTime: Number,
-  servings: Number,
-  allergens: [String],
-  author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
-});
+  instructions: [{ type: String, required: true }],
+  preparationTime: { type: Number, required: true },
+  cookingTime: { type: Number, required: true },
+  servings: { type: Number, required: true },
+  difficulty: { 
+    type: String, 
+    enum: ['easy', 'medium', 'hard'], 
+    required: true 
+  },
+  culture: { type: String, required: true, index: true },
+  category: [{ type: String, required: true }],
+  authorId: { type: String, required: true, index: true },
+  images: [{ type: String }],
+  videoUrl: { type: String },
+}, { timestamps: true });
 
-export const Recipe = mongoose.model('Recipe', recipeSchema);
+RecipeSchema.index({ title: 'text', description: 'text' });
+
+export default mongoose.model<IRecipe>('Recipe', RecipeSchema);

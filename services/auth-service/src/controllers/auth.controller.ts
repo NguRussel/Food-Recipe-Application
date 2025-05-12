@@ -14,30 +14,51 @@ interface AuthRequest extends Request {
 
 interface RegisterBody {
   email: string;
+  username: string;
   password: string;
 }
 
-interface LoginBody extends RegisterBody {
+interface LoginBody {
+  login: string; // Can be email or username
+  password: string;
   token?: string;
 }
 
 export class AuthController {
   async register(req: Request, res: Response) {
     try {
-      const { email, password } = req.body;
+      const { email, username, password } = req.body;
 
-      // Check if user already exists
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
+      // Check if required fields are provided
+      if (!email || !username || !password) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Email, username and password are required'
+        });
+      }
+
+      // Check if user already exists with this email
+      const existingUserByEmail = await User.findOne({ email });
+      if (existingUserByEmail) {
         return res.status(400).json({
           status: 'error',
           message: 'User with this email already exists'
         });
       }
 
+      // Check if user already exists with this username
+      const existingUserByUsername = await User.findOne({ username });
+      if (existingUserByUsername) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'User with this username already exists'
+        });
+      }
+
       // Create new user
       const user = await User.create({
         email,
+        username,
         password,
         twoFactorEnabled: false,
         twoFactorSecret: ''
@@ -60,6 +81,7 @@ export class AuthController {
         data: {
           user: { 
             email: user.email,
+            username: user.username,
             twoFactorEnabled: user.twoFactorEnabled
           },
           qrCodeUrl
@@ -75,39 +97,26 @@ export class AuthController {
 
   async login(req: Request, res: Response) {
     try {
-      const { email, password, token } = req.body;
+      const { login, password, token } = req.body;
 
       // Validate required fields
-      if (!email || !password) {
+      if (!login || !password) {
         return res.status(400).json({
           status: 'error',
-          message: 'Email and password are required'
+          message: 'Login (email or username) and password are required'
         });
       }
 
+      // Find user by email or username
+      const isEmail = login.includes('@');
+      const query = isEmail ? { email: login } : { username: login };
+      
       // Find user and verify credentials
-      const user = await User.findOne({ email }).select('+password');
+      const user = await User.findOne(query).select('+password');
       if (!user) {
         return res.status(401).json({
           status: 'error',
           message: 'Invalid credentials'
-        });
-      }
-
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        return res.status(400).json({
-          status: 'error',
-          message: 'Invalid email format'
-        });
-      }
-
-      // Validate password strength
-      if (password.length < 8) {
-        return res.status(400).json({
-          status: 'error',
-          message: 'Password must be at least 8 characters long'
         });
       }
 
@@ -153,7 +162,8 @@ export class AuthController {
       const jwtToken = jwt.sign(
         { 
           id: user._id,
-          email: user.email
+          email: user.email,
+          username: user.username
         },
         process.env.JWT_SECRET as jwt.Secret,
         { 
@@ -171,6 +181,7 @@ export class AuthController {
           token: jwtToken,
           user: {
             email: user.email,
+            username: user.username,
             twoFactorEnabled: user.twoFactorEnabled
           }
         }

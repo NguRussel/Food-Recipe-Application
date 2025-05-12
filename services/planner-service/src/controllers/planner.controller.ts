@@ -12,7 +12,7 @@ export class PlannerController {
   async createPlan(req: Request, res: Response) {
     try {
       const planData = {
-        userId: req.user.id,
+        userId: req.user?.id || '',
         purpose: req.body.purpose,
         numberOfPeople: req.body.numberOfPeople,
         duration: req.body.duration,

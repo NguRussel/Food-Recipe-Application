@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
 import bcrypt from 'bcryptjs';
+import { sendEmail } from '../email.service';
 
 interface AuthRequest extends Request {
   user?: {
@@ -76,15 +77,29 @@ export class AuthController {
       // Generate QR code
       const qrCodeUrl = await QRCode.toDataURL(secret.otpauth_url!);
 
+      // Inside your registration method, after creating the user:
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+      user.emailVerificationOTP = otp;
+      user.emailVerificationExpires = otpExpires;
+      await user.save();
+      
+      await sendEmail(user.email, 'Your OTP Code', `Your OTP is: ${otp}`);
+      const token = jwt.sign({ email: user.email, role: user.role }, process.env.JWT_SECRET!, { expiresIn: '10m' });
+      // Send this token to the frontend in the response
+      return res.status(201).json({
+        message: 'Registration successful. Please verify your email with the OTP sent.',
+        token // <-- frontend should store this and use it for OTP verification
+      });
       res.status(201).json({
         status: 'success',
+        message: 'Registration successful. Please verify your email with the OTP sent.',
         data: {
-          user: { 
+          user: {
             email: user.email,
             username: user.username,
-            twoFactorEnabled: user.twoFactorEnabled
-          },
-          qrCodeUrl
+            isEmailVerified: user.isEmailVerified
+          }
         }
       });
     } catch (error: any) {
@@ -163,7 +178,8 @@ export class AuthController {
         { 
           id: user._id,
           email: user.email,
-          username: user.username
+          username: user.username,
+          role: user.role
         },
         process.env.JWT_SECRET as jwt.Secret,
         { 
@@ -251,3 +267,43 @@ export class AuthController {
     }
   }
 }
+
+export const verifyEmailOtp = async (req: Request, res: Response) => {
+  try {
+    // Get JWT from Authorization header
+    const authHeader = req.headers['authorization'];
+    if (!authHeader) {
+      return res.status(401).json({ message: 'No token provided.' });
+    }
+    const token = authHeader.split(' ')[1];
+    let email;
+    try {
+      const decoded: any = jwt.verify(token, process.env.JWT_SECRET!);
+      email = decoded.email;
+    } catch (err) {
+      return res.status(401).json({ message: 'Invalid or expired token.' });
+    }
+    const { otp } = req.body;
+    if (!otp) {
+      return res.status(400).json({ message: 'OTP is required.' });
+    }
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+    if (
+      user.emailVerificationOTP !== otp ||
+      !user.emailVerificationExpires ||
+      user.emailVerificationExpires < new Date()
+    ) {
+      return res.status(400).json({ message: 'Invalid or expired OTP.' });
+    }
+    user.isEmailVerified = true;
+    user.emailVerificationOTP = undefined;
+    user.emailVerificationExpires = undefined;
+    await user.save();
+    return res.status(200).json({ message: 'Email verified successfully.' });
+  } catch (error) {
+    return res.status(500).json({ message: 'Server error.' });
+  }
+};

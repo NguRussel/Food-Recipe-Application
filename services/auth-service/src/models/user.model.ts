@@ -7,6 +7,10 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   twoFactorSecret: { type: String },
   twoFactorEnabled: { type: Boolean, default: false },
+  role: { type: String, enum: ['user', 'admin'], default: 'user' },
+  isEmailVerified: { type: Boolean, default: false },
+  emailVerificationOTP: { type: String },
+  emailVerificationExpires: { type: Date },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

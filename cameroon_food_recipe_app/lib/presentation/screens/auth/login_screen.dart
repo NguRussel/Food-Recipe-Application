@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_theme.dart';
+import 'package:cameroon_food_recipe_app/core/constants/app_colors.dart';
+import 'package:cameroon_food_recipe_app/data/services/auth_service.dart';
+import 'package:cameroon_food_recipe_app/presentation/screens/auth/signup_screen.dart';
+//import 'package:cameroon_food_recipe_app/presentation/screens/auth/otp_verification_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,6 +15,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _authService = AuthService();
+  bool _isLoading = false;
   bool _obscurePassword = true;
 
   @override
@@ -21,13 +26,34 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _login() {
+  Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
-      // TODO: Implement login functionality with your auth service
-      print('Login with: ${_emailController.text}');
-      
-      // Navigate to home screen or show OTP screen if needed
-      // Navigator.pushReplacementNamed(context, '/home');
+      setState(() {
+        _isLoading = true;
+      });
+
+      final result = await _authService.login(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (!mounted) return;
+
+      if (result['success']) {
+        // Navigate to home screen or dashboard
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Login successful')));
+        // TODO: Navigate to home screen
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(result['message'])));
+      }
     }
   }
 
@@ -35,83 +61,78 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Form(
             key: _formKey,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // App Logo
+                const SizedBox(height: 40),
+                // Logo placeholder - replace with your actual logo
                 Container(
-                  height: 100,
-                  width: 100,
+                  width: 80,
+                  height: 80,
                   decoration: const BoxDecoration(
-                    color: AppTheme.primaryColor,
+                    color: AppColors.primary,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
                     Icons.restaurant_menu,
                     color: Colors.white,
-                    size: 50,
+                    size: 40,
                   ),
                 ),
                 const SizedBox(height: 16),
-                
-                // App Name
                 const Text(
                   'TASTY CAMEROON',
-                  textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.primaryColor,
+                    color: AppColors.text,
+                  ),
+                ),
+                const SizedBox(height: 40),
+                const Text(
+                  'Sign In',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.text,
                   ),
                 ),
                 const SizedBox(height: 32),
-                
-                // Sign In Text
-                const Text(
-                  'Sign In',
-                  textAlign: TextAlign.center,
-                  style: AppTheme.headingStyle,
-                ),
-                const SizedBox(height: 24),
-                
-                // Email Field
                 TextFormField(
                   controller: _emailController,
-                  decoration: AppTheme.inputDecoration('Email'),
                   keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    prefixIcon: Icon(Icons.email_outlined),
+                  ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your email';
                     }
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                    if (!RegExp(
+                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                    ).hasMatch(value)) {
                       return 'Please enter a valid email';
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
-                
-                // Password Field
                 TextFormField(
                   controller: _passwordController,
+                  obscureText: _obscurePassword,
                   decoration: InputDecoration(
-                    hintText: 'Password',
-                    filled: true,
-                    fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-                    ),
+                    labelText: 'Password',
+                    prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                        color: Colors.grey,
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                       ),
                       onPressed: () {
                         setState(() {
@@ -120,7 +141,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                     ),
                   ),
-                  obscureText: _obscurePassword,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your password';
@@ -128,58 +148,70 @@ class _LoginScreenState extends State<LoginScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
-                
-                // Fingerprint Option
+                const SizedBox(height: 24),
+                // Fingerprint option
                 GestureDetector(
                   onTap: () {
                     // TODO: Implement fingerprint authentication
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Fingerprint authentication not implemented yet',
+                        ),
+                      ),
+                    );
                   },
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: AppTheme.primaryColor),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.fingerprint,
-                          color: AppTheme.primaryColor,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Use fingerprint',
-                        style: TextStyle(color: AppTheme.primaryColor),
-                      ),
-                    ],
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: AppColors.primary),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.fingerprint,
+                      color: AppColors.primary,
+                      size: 28,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 24),
-                
-                // Sign In Button
-                ElevatedButton(
-                  onPressed: _login,
-                  style: AppTheme.primaryButtonStyle,
-                  child: const Text('SIGN IN'),
+                const SizedBox(height: 8),
+                const Text(
+                  'Use fingerprint',
+                  style: TextStyle(fontSize: 12, color: AppColors.textLight),
                 ),
-                const SizedBox(height: 16),
-                
-                // Sign Up Link
+                const SizedBox(height: 32),
+                ElevatedButton(
+                  onPressed: _isLoading ? null : _login,
+                  child:
+                      _isLoading
+                          ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                          : const Text('SIGN IN'),
+                ),
+                const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text("Don't have an account?"),
+                    const Text(
+                      "Don't have an account?",
+                      style: TextStyle(color: AppColors.textLight),
+                    ),
                     TextButton(
                       onPressed: () {
-                        Navigator.pushNamed(context, '/signup');
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SignupScreen(),
+                          ),
+                        );
                       },
-                      child: const Text(
-                        'Sign up',
-                        style: TextStyle(color: AppTheme.primaryColor),
-                      ),
+                      child: const Text('Sign up'),
                     ),
                   ],
                 ),

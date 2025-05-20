@@ -1,90 +1,53 @@
 import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
 
 class AppTheme {
-  // Colors
-  static const Color primaryColor = Color(0xFFE67E22); // Orange color from mockup
-  static const Color secondaryColor = Color(0xFFF39C12); // Lighter orange
-  static const Color backgroundColor = Colors.white;
-  static const Color textColor = Color(0xFF333333);
-  static const Color lightTextColor = Color(0xFF666666);
-  static const Color errorColor = Color(0xFFE74C3C);
-
-  // Text Styles
-  static const TextStyle headingStyle = TextStyle(
-    fontSize: 24,
-    fontWeight: FontWeight.bold,
-    color: textColor,
-  );
-
-  static const TextStyle subheadingStyle = TextStyle(
-    fontSize: 18,
-    fontWeight: FontWeight.w500,
-    color: textColor,
-  );
-
-  static const TextStyle bodyStyle = TextStyle(
-    fontSize: 16,
-    color: textColor,
-  );
-
-  static const TextStyle smallTextStyle = TextStyle(
-    fontSize: 14,
-    color: lightTextColor,
-  );
-
-  // Button Styles
-  static final ButtonStyle primaryButtonStyle = ElevatedButton.styleFrom(
-    backgroundColor: primaryColor,
-    foregroundColor: Colors.white,
-    padding: const EdgeInsets.symmetric(vertical: 16),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(8),
-    ),
-  );
-
-  // Input Decoration
-  static InputDecoration inputDecoration(String hintText) {
-    return InputDecoration(
-      hintText: hintText,
-      filled: true,
-      fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+  static ThemeData get lightTheme {
+    return ThemeData(
+      primaryColor: AppColors.primary,
+      scaffoldBackgroundColor: AppColors.background,
+      fontFamily: 'Poppins',
+      textTheme: const TextTheme(
+        displayLarge: TextStyle(color: AppColors.text, fontWeight: FontWeight.bold),
+        displayMedium: TextStyle(color: AppColors.text, fontWeight: FontWeight.bold),
+        displaySmall: TextStyle(color: AppColors.text, fontWeight: FontWeight.bold),
+        headlineMedium: TextStyle(color: AppColors.text, fontWeight: FontWeight.w600),
+        titleLarge: TextStyle(color: AppColors.text, fontWeight: FontWeight.w600),
+        bodyLarge: TextStyle(color: AppColors.text),
+        bodyMedium: TextStyle(color: AppColors.textLight),
       ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: AppColors.inputBackground,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.inputBorder),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: AppColors.primary),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: primaryColor),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          minimumSize: const Size(double.infinity, 50),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.primary,
+        ),
       ),
     );
   }
-
-  // App Theme Data
-  static ThemeData themeData = ThemeData(
-    primaryColor: primaryColor,
-    scaffoldBackgroundColor: backgroundColor,
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: primaryColor,
-      primary: primaryColor,
-      secondary: secondaryColor,
-      error: errorColor,
-    ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: primaryButtonStyle,
-    ),
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: Colors.white,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-      ),
-    ),
-  );
 }

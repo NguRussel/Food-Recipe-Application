@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
-import '../../../core/theme/app_theme.dart';
+import 'package:cameroon_food_recipe_app/core/constants/app_colors.dart';
+import 'package:cameroon_food_recipe_app/data/services/auth_service.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
   final String email;
-  
+
   const OtpVerificationScreen({super.key, required this.email});
 
   @override
@@ -12,8 +13,10 @@ class OtpVerificationScreen extends StatefulWidget {
 }
 
 class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
-  final TextEditingController _otpController = TextEditingController();
-  String _currentOtp = "";
+  final _otpController = TextEditingController();
+  final _authService = AuthService();
+  bool _isLoading = false;
+  bool _isResending = false;
 
   @override
   void dispose() {
@@ -21,26 +24,57 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     super.dispose();
   }
 
-  void _verifyOtp() {
-    if (_currentOtp.length == 6) {
-      // TODO: Implement OTP verification with your auth service
-      print('Verifying OTP: $_currentOtp for ${widget.email}');
-      
-      // Navigate to home screen after successful verification
-      // Navigator.pushReplacementNamed(context, '/home');
+  Future<void> _verifyOtp() async {
+    if (_otpController.text.length == 6) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      final result = await _authService.verifyOtp(
+        widget.email,
+        _otpController.text,
+      );
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (!mounted) return;
+
+      if (result['success']) {
+        // Navigate to home screen or dashboard
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Verification successful')),
+        );
+        // Navigate to home screen
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['message'])),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid OTP code')),
+        const SnackBar(content: Text('Please enter the complete verification code')),
       );
     }
   }
 
-  void _resendOtp() {
-    // TODO: Implement resend OTP functionality
-    print('Resending OTP to ${widget.email}');
-    
+  Future<void> _resendOtp() async {
+    setState(() {
+      _isResending = true;
+    });
+
+    final result = await _authService.resendOtp(widget.email);
+
+    setState(() {
+      _isResending = false;
+    });
+
+    if (!mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('OTP code resent successfully')),
+      SnackBar(content: Text(result['message'])),
     );
   }
 
@@ -48,26 +82,30 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              const SizedBox(height: 60),
               const Text(
                 'OTP Verification',
-                textAlign: TextAlign.center,
-                style: AppTheme.headingStyle,
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.text,
+                ),
               ),
               const SizedBox(height: 16),
-              
               Text(
                 "We've sent a verification code to\n${widget.email}",
                 textAlign: TextAlign.center,
-                style: AppTheme.bodyStyle,
+                style: const TextStyle(
+                  color: AppColors.textLight,
+                  fontSize: 14,
+                ),
               ),
-              const SizedBox(height: 32),
-              
+              const SizedBox(height: 40),
               // OTP Input Fields
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -75,11 +113,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   appContext: context,
                   length: 6,
                   controller: _otpController,
-                  onChanged: (value) {
-                    setState(() {
-                      _currentOtp = value;
-                    });
-                  },
+                  onChanged: (value) {},
                   pinTheme: PinTheme(
                     shape: PinCodeFieldShape.box,
                     borderRadius: BorderRadius.circular(8),
@@ -88,35 +122,74 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     activeFillColor: Colors.white,
                     inactiveFillColor: Colors.white,
                     selectedFillColor: Colors.white,
-                    activeColor: AppTheme.primaryColor,
-                    inactiveColor: Colors.grey[300],
-                    selectedColor: AppTheme.primaryColor,
+                    activeColor: AppColors.primary,
+                    inactiveColor: AppColors.inputBorder,
+                    selectedColor: AppColors.primary,
                   ),
                   keyboardType: TextInputType.number,
                   enableActiveFill: true,
                 ),
               ),
               const SizedBox(height: 32),
-              
               // Verify Button
-              ElevatedButton(
-                onPressed: _verifyOtp,
-                style: AppTheme.primaryButtonStyle,
-                child: const Text('VERIFY'),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _verifyOtp,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    disabledBackgroundColor: AppColors.primary.withOpacity(0.6),
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text(
+                          'VERIFY',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                ),
               ),
-              const SizedBox(height: 16),
-              
-              // Resend OTP Link
+              const SizedBox(height: 24),
+              // Resend Code
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text("Didn't receive the code?"),
-                  TextButton(
-                    onPressed: _resendOtp,
-                    child: const Text(
-                      'Resend',
-                      style: TextStyle(color: AppTheme.primaryColor),
-                    ),
+                  const Text(
+                    "Didn't receive the code? ",
+                    style: TextStyle(color: AppColors.textLight),
+                  ),
+                  GestureDetector(
+                    onTap: _isResending ? null : _resendOtp,
+                    child: _isResending
+                        ? const SizedBox(
+                            height: 12,
+                            width: 12,
+                            child: CircularProgressIndicator(
+                              color: AppColors.primary,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            'Resend',
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ],
               ),

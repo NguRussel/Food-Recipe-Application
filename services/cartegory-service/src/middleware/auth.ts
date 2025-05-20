@@ -11,7 +11,7 @@ interface DecodedToken {
 declare global {
   namespace Express {
     interface Request {
-      user?: DecodedToken;
+      user?: jwt.JwtPayload;
     }
   }
 }

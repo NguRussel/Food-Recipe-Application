@@ -31,7 +31,7 @@ class ClarifaiService {
                     imageBytes = fs_1.default.readFileSync(imagePath);
                 }
                 catch (error) {
-                    return reject(new Error(`Failed to read image file: ${error.message}`));
+                    return reject(new Error(`Failed to read image file: ${error instanceof Error ? error.message : String(error)}`));
                 }
             }
             // Prepare request for Clarifai API
@@ -65,7 +65,7 @@ class ClarifaiService {
                 if (response.outputs && response.outputs.length > 0) {
                     const concepts = response.outputs[0].data.concepts;
                     if (concepts && concepts.length > 0) {
-                        concepts.forEach(concept => {
+                        concepts.forEach((concept) => {
                             // Only include concepts with confidence > 0.5
                             if (concept.value > 0.5) {
                                 ingredients.push({

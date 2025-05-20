@@ -40,7 +40,12 @@ class ImageUtils {
             }
         }
         catch (error) {
-            console.error(`Error deleting image: ${error.message}`);
+            if (error instanceof Error) {
+                console.error(`Error deleting image: ${error.message}`);
+            }
+            else {
+                console.error('Error deleting image: Unknown error');
+            }
         }
     }
     /**

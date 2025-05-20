@@ -28,10 +28,10 @@ class RecipeMatchService {
             // Match recipes with detected ingredients
             const matchedRecipes = [];
             recipes.forEach(recipe => {
-                const recipeIngredients = recipe.ingredients.map(ing => ing.name.toLowerCase());
+                const recipeIngredients = recipe.ingredients.map((ing) => ing.name.toLowerCase());
                 const matchedIngredients = [];
                 // Find matching ingredients
-                recipeIngredients.forEach(recipeIng => {
+                recipeIngredients.forEach((recipeIng) => {
                     detectedIngredientNames.forEach(detectedIng => {
                         // Check if detected ingredient is part of recipe ingredient or vice versa
                         if (recipeIng.includes(detectedIng) || detectedIng.includes(recipeIng)) {

@@ -22,7 +22,7 @@ class ScanController {
             await this.processImage(req, res, imagePath, false);
         }
         catch (error) {
-            res.status(500).json({ error: error.message || 'An error occurred during image scanning' });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'An error occurred during image scanning' });
         }
     }
     /**
@@ -45,7 +45,7 @@ class ScanController {
             await this.processImage(req, res, imagePath, true);
         }
         catch (error) {
-            res.status(500).json({ error: error.message || 'An error occurred during image scanning' });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'An error occurred during image scanning' });
         }
     }
     /**
@@ -113,7 +113,7 @@ class ScanController {
             });
         }
         catch (error) {
-            res.status(500).json({ error: error.message || 'An error occurred retrieving scan history' });
+            res.status(500).json({ error: error instanceof Error ? error.message : 'An error occurred retrieving scan history' });
         }
     }
 }

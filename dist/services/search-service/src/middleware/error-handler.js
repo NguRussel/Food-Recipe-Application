@@ -1,0 +1,26 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.errorHandler = void 0;
+const errorHandler = (error, req, res, next) => {
+    console.error('Error:', error);
+    if (error.name === 'ValidationError') {
+        res.status(400).json({
+            error: 'Validation Error',
+            details: error.message
+        });
+        return;
+    }
+    if (error.name === 'MongoError' || error.name === 'MongoServerError') {
+        res.status(500).json({
+            error: 'Database Error',
+            details: 'An error occurred while accessing the database'
+        });
+        return;
+    }
+    res.status(500).json({
+        error: 'Internal Server Error',
+        details: 'An unexpected error occurred'
+    });
+};
+exports.errorHandler = errorHandler;
+//# sourceMappingURL=error-handler.js.map

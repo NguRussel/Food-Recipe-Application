@@ -19,12 +19,13 @@ app.use(morgan('dev'));
 // Routes
 app.use('/api/ratings', ratingRoutes);
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 // MongoDB connection
-const RATING_DB_URI = process.env.RATING_DB_URI;
-if (!RATING_DB_URI) {
-  console.error('RATING_DB_URI is not defined in environment variables');
-  process.exit(1);
-}
+const RATING_DB_URI = process.env.RATING_DB_URI || 'mongodb://localhost:27017/cameroon-food-recipe';
 
 mongoose.connect(RATING_DB_URI, {
   serverSelectionTimeoutMS: 5000,
@@ -33,7 +34,11 @@ mongoose.connect(RATING_DB_URI, {
 .then(() => console.log('Connected to Rating database'))
 .catch((err) => console.error('Rating DB connection error:', err));
 
-// Error handling
+// Error handling middleware
+app.use((req, res) => {
+  res.status(404).json({ error: 'Endpoint not found' });
+});
+
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong in Rating Service!' });
